@@ -1,0 +1,26 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000" # Map container port 5000 to host port 5000
+    volumes:
+      - .:/app # Mount the app directory for live updates (optional for development)
+      - /app/node_modules # Ignore node_modules for host mounting
+    depends_on:
+      - mongo # Ensure MongoDB starts before the app
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/plancake
+
+  mongo:
+    image: mongo:6
+    container_name: plancake_mongo
+    ports:
+      - "27017:27017" # Map MongoDB's port
+    volumes:
+      - mongo_data:/data/db # Persistent storage for MongoDB
+
+volumes:
+  mongo_data:

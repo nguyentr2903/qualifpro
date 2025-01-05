@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <div class="container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-light  mt-3">
+      <div class="container-fluid">
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class = 'nav-item'>
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">Dashboard</a>
+            </li>
+          
+            
+          </ul>
+        </div>
+     
+
+        
+      </div>
+    </nav>
+  
+
+    <!-- Goals Section -->
+    <div id="goalsSection">
+      <h4>Your Goals (<%= goals.length %>)</h4>
+      <div id="goalsContainer" class="row">
+        <% if (goals.length > 0) { %>
+          <% goals.forEach((goal, index) => { %>
+            <div class="col-md-4">
+              <div class="card text-center shadow-sm p-3 mb-4">
+                <div class="dashboard-card-body">
+                  <h5 class="card-title"><%= goal.title %></h5>
+                  <% if (goal.due_date) { %>
+                    <p><i class="bi bi-calendar"></i> <strong>Due Date:</strong> <%= new Date(goal.due_date).toLocaleDateString("en-UK") %></p>
+                  <% } %>  
+                  <% if (goal.due_time) { %>
+                    <p><strong>Due Time:</strong> <%= goal.due_time %></p>
+                  <% } %>
+
+                  <% if (goal.description) { %>
+                    <p>Description:</i> <%= goal.description %></p>
+                  <% } %>
+                  
+                  <div class="progress mt-3">
+                    <div
+                      class="progress-bar"
+                      role="progressbar"
+                      style="width: <%= goal.progress %>%"
+                      aria-valuenow="<%= goal.progress %>"
+                      aria-valuemin="0"
+                      aria-valuemax="100">
+                      <%= goal.progress %>% Complete
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between mt-3">
+                    <i 
+                      class="bi bi-arrow-up-right expand-goal-button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#goalDetailsModal"
+                      data-goal-id="<%= goal._id %>"
+                      data-goal-title="<%= goal.title %>"
+                      data-goal-description="<%= goal.description %>"
+                      data-goal-due-date="<%= goal.due_date %>"
+                      data-goal-due-time="<%= goal.due_time %>"
+                      data-goal-location='<%= goal.goal_location.address %>'
+                      data-goal-subtasks='<%= JSON.stringify(goal.subtasks) %>'
+                      data-goal-progress="<%= goal.progress %>"
+                      data-goal-priority="<%= goal.priority %>"
+                      data-goal-completed="<%= goal.completed %>"
+                    ></i>
+                 
+                    <i class="bi bi-star favorite-button"></i>
+                    <i class="bi bi-trash remove-goal-button" data-goal-id="<%= goal._id %>"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <p>No goals available. Start by adding a new goal!</p>
+        <% } %>
+      </div>
+      
+    </div>
+
+    <!-- Goal Details Modal -->
+    <div class="modal fade" id="goalDetailsModal" tabindex="-1" aria-labelledby="goalDetailsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="goalDetailsModalLabel">Edit Goal Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editGoalForm">
+              <!-- Title -->
+              <div class="mb-3">
+                <label for="editGoalTitle" class="form-label">Title</label>
+                <input type="text" id="editGoalTitle" class="form-control" required>
+              </div>
+    
+              <!-- Description -->
+              <div class="mb-3">
+                <label for="editGoalDescription" class="form-label">Description</label>
+                <textarea id="editGoalDescription" class="form-control" rows="3"></textarea>
+              </div>
+    
+              <!-- Due Date -->
+              <div class="mb-3">
+                <label for="editGoalDueDate" class="form-label">Due Date</label>
+                <input type="date" id="editGoalDueDate" class="form-control" required>
+              </div>
+               <!-- Due Time -->
+               <div class="mb-3">
+                <label for="editGoalDueTime" class="form-label">Due Time</label>
+                <input type="time" id="editGoalDueTime" class="form-control" required>
+              </div>
+              <!-- Priority -->
+              <div class="mb-3">
+                <label for="editGoalPriority" class="form-label">Priority</label>
+                <select id="editGoalPriority" class="form-select">
+                  <option value="default">  </option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+    
+              <!-- Location -->
+              <div class="mb-3">
+                <label for="editGoalLocation" class="form-label">Location</label>
+                <input type="text" id="editGoalLocation" class="form-control">
+              </div>
+    
+              <!-- Subtasks -->
+              <div class="mb-3">
+                <label class="form-label">Subtasks</label>
+                <div id="editGoalSubtasksContainer">
+                  <!-- Subtasks will be dynamically added here -->
+                </div>
+              </div>
+    
+              <!-- Save Button -->
+              <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>       
+    <script>
+  document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".expand-goal-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const goalId = button.getAttribute("data-goal-id");
+      const title = button.getAttribute("data-goal-title");
+      const description = button.getAttribute("data-goal-description");
+      const dueDate = button.getAttribute("data-goal-due-date");
+      const dueTime = button.getAttribute("data-goal-due-time");
+      const priority = button.getAttribute("data-goal-priority");
+      const location = button.getAttribute("data-goal-location");
+      const subtasks = JSON.parse(button.getAttribute("data-goal-subtasks"));
+
+      // Populate goal details
+      document.getElementById("editGoalTitle").value = title;
+      document.getElementById("editGoalDescription").value = description || "";
+      document.getElementById("editGoalDueDate").value = dueDate || "";
+      document.getElementById("editGoalDueTime").value = dueTime || " ";
+      document.getElementById("editGoalPriority").value = priority || "unspecified";
+      document.getElementById("editGoalLocation").value = location || "";
+
+      // Populate subtasks
+      const subtasksContainer = document.getElementById("editGoalSubtasksContainer");
+      subtasksContainer.innerHTML = ""; // Clear previous subtasks
+      if (subtasks && subtasks.length > 0) {
+        subtasks.forEach((subtask, index) => {
+          const subtaskDiv = document.createElement("div");
+          subtaskDiv.className = "form-check mb-2";
+          subtaskDiv.innerHTML = `
+            <input type="checkbox" class="form-check-input" id="subtask-${index}" ${subtask.completed ? "checked" : ""}>
+            <label class="form-check-label" for="subtask-${index}">${subtask.name}</label>
+          `;
+          subtasksContainer.appendChild(subtaskDiv);
+
+          // Add event listener to handle subtask updates
+          document.getElementById(`subtask-${index}`).addEventListener("change", async (e) => {
+            const updatedStatus = e.target.checked;
+            try {
+              await fetch(`/api/goals/${goalId}/subtasks/${index}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ completed: updatedStatus }),
+              });
+              console.log(`Subtask ${subtask.name} updated successfully.`);
+            } catch (error) {
+              console.error(`Error updating subtask ${subtask.name}:`, error);
+            }
+          });
+        });
+      } else {
+        subtasksContainer.innerHTML = "<p>No subtasks available.</p>";
+      }
+    });
+  });
+});
+
+    </script>
+<!--Order items by favorite-->
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const goalsContainer = document.getElementById("goalsContainer");
+  
+    // Add click event listener for all favorite buttons
+    document.querySelectorAll(".favorite-button").forEach((button, index) => {
+      button.addEventListener("click", async () => {
+        const goalCard = button.closest(".card");
+        const goalId = goalCard.querySelector(".expand-goal-button").getAttribute("data-goal-id");
+  
+        try {
+          // Toggle the "favorite" status in the backend
+          const response = await fetch(`/api/goals/${goalId}/favorite`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+  
+          if (!response.ok) {
+            throw new Error("Failed to update goal favorite status");
+          }
+  
+          // Update the UI
+          const isFavorited = button.classList.toggle("text-warning"); // Toggle yellow color
+          if (isFavorited) {
+            // Move the card to the first position
+            goalsContainer.insertBefore(goalCard.parentElement, goalsContainer.firstChild);
+          } else {
+            // Reload or rearrange cards to reflect the new order
+            location.reload(); // Or dynamically reorder the cards without reloading
+          }
+        } catch (error) {
+          console.error("Error updating goal favorite status:", error);
+          alert("Failed to update goal favorite status. Please try again.");
+        }
+      });
+    });
+  });
+  </script>
+ <!--remove goal-->
+ <script>
+  document.addEventListener("DOMContentLoaded", () => {
+  // Add event listener to all remove goal buttons
+  document.querySelectorAll(".remove-goal-button").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const goalId = button.getAttribute("data-goal-id");
+
+      if (confirm("Are you sure you want to delete this goal?")) {
+        try {
+          const response = await fetch(`/api/goals/${goalId}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to delete the goal.");
+          }
+
+          alert("Goal deleted successfully!");
+          location.reload(); // Reload the page to reflect changes
+        } catch (error) {
+          console.error("Error deleting goal:", error);
+          alert("Failed to delete the goal. Please try again.");
+        }
+      }
+    });
+  });
+});
+
+ </script>
+       <!-- Task Section -->
+       <div class="mt-5" id="taskContainer">
+        <h4>Tasks (<%= nearbyTasks?.length || 0 %>)</h4>
+        <div id="taskList" class="row">
+          <% if (nearbyTasks.length > 0) { %>
+            <% nearbyTasks.forEach(task => { %>
+              <div class="col-md-4">
+                <div class="card p-3 mb-4">
+                  <h5 class="card-title"><%= task.title %></h5>
+                  <% if (task.due_date) { %>
+                    <p><strong>Due Date:</strong> <%= new Date(task.due_date).toLocaleDateString("en-UK") %></p>
+                  <% } %>
+                   
+                  <% if (task.due_time) { %>
+                    <p><strong>Due Time:</strong> <%= task.due_time %></p>
+                  <% } %>
+                  <p><strong>Priority:</strong> <%= task.priority %></p>
+                  <% if (task.task_location) { %>
+                    <p><strong>Location:</strong> <%= task.task_location.address %></p>
+                  <% } %>
+                  
+                  <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-primary btn-sm" onclick="openEditTaskModal('<%= task._id %>')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTask('<%= task._id %>')">Remove</button>
+                    <button class="btn btn-success btn-sm" onclick="markTaskComplete('<%= task._id %>')">Complete</button>
+
+                  </div>
+                 
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p>No tasks found near you. Start by adding a new task!</p>
+          <% } %>
+        </div>
+      </div>
+ <script>
+  async function markTaskComplete(taskId) {
+  try {
+    const response = await fetch(`/api/tasks/${taskId}/complete`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      const updatedStats = await response.json();
+      localStorage.setItem("stats", JSON.stringify(updatedStats));
+      alert("Task marked as complete!");
+    } else {
+      const error = await response.json();
+      alert(`Failed to mark task as complete: ${error.message}`);
+    }
+  } catch (error) {
+    console.error("Error marking task as complete:", error);
+    alert("An error occurred while marking the task as complete.");
+  }
+}
+
+ </script>
+
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editTaskForm">
+              <input type="hidden" id="editTaskId">
+              <div class="mb-3">
+                <label for="editTaskTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="editTaskTitle" required>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="editTaskDescription" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDate" class="form-label">Due Date</label>
+                <input type="date" class="form-control" id="editTaskDate" required>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskTime" class="form-label">Due Time</label>
+                <input type="time" class="form-control" id="editTaskTime">
+              </div>
+              <div class="mb-3">
+                <label for="editTaskPriority" class="form-label">Priority</label>
+                <select class="form-select" id="editTaskPriority">
+                  <option value="default"> </option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskAddress" class="form-label">Edit Task Address</label>
+                <input type="text" class="form-control" id="editTaskAddress" placeholder="Enter location address">
+                <button
+                  type="button"
+                  class="btn btn-secondary mt-2"
+                  id="editTaskShowMapButton"
+                  data-address-input="editTaskAddress"
+                  data-map-container="editTaskMapContainer">
+                  Show Map
+                </button>
+              </div>
+              <div id="editTaskMapContainer" class="mb-3" style="height: 300px; display: none;"></div>
+              <input type="hidden" id="latitude" name="latitude">
+              <input type="hidden" id="longitude" name="longitude">
+              <!-- Map Container -->
+              <div id="mapContainer" class="mb-3" style="height: 300px; display: none;"></div>
+              <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      //Edit Task
+
+      async function openEditTaskModal(taskId) {
+  try {
+    const response = await fetch(`/api/tasks/${taskId}`);
+    if (!response.ok) throw new Error("Failed to fetch task details.");
+
+    const task = await response.json();
+    document.getElementById("editTaskId").value = task._id; // Hidden field for task ID
+    document.getElementById("editTaskTitle").value = task.title;
+    document.getElementById("editTaskDescription").value = task.description || "";
+    document.getElementById("editTaskDate").value = task.due_date ? task.due_date.split("T")[0] : "";
+    document.getElementById("editTaskTime").value = task.due_time || ""; // Prefill due_time if available
+    document.getElementById("editTaskPriority").value = task.priority || "unspecified";
+    document.getElementById("taskAddress").value = task.task_location.address || " ";
+
+
+
+    const modal = new bootstrap.Modal(document.getElementById("editTaskModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error opening edit task modal:", error);
+    alert("Failed to fetch task details.");
+  }
+}
+
+  
+  document.getElementById("editTaskForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const taskId = document.getElementById("editTaskId").value;
+    const updatedTask = {
+      title: document.getElementById("editTaskTitle").value.trim(),
+      description: document.getElementById("editTaskDescription").value.trim(),
+      due_date: document.getElementById("editTaskDate").value,
+      due_time: document.getElementById("editTaskTime").value,
+      priority: document.getElementById("editTaskPriority").value,
+      task_location: {
+    address: document.getElementById("editTaskAddress").value.trim(),
+    latitude: document.getElementById("latitude").value || null,
+    longitude: document.getElementById("longitude").value || null,
+  },
+    };
+
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedTask),
+      });
+
+      if (response.ok) {
+        alert("Task updated successfully!");
+        location.reload();
+      } else {
+        const error = await response.json();
+        console.error("Error response:", error);
+        alert(`Failed to update task: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+      alert("An error occurred while updating the task.");
+    }
+  });
+    </script>
+    
+    <script>
+     
+      
+      // Delete Task
+      async function deleteTask(taskId) {
+        if (!confirm("Are you sure you want to delete this task?")) return;
+    
+        try {
+          const response = await fetch(`/api/tasks/${taskId}`, {
+            method: "DELETE",
+          });
+    
+          if (!response.ok) {
+            throw new Error("Failed to delete task.");
+          }
+          alert("Task deleted successfully!");
+          location.reload();
+        } catch (error) {
+          console.error("Error deleting task:", error);
+          alert("Failed to delete task.");
+        }
+      }
+    
+     
+    
+   
+      
+    </script>
+        
+    <!-- Upcoming Schedule Section -->
+    <div class="mt-5" id="scheduleSection">
+      <h3>Upcoming Schedule</h3>
+      <div class="mb-3">
+        <button class="btn btn-outline-primary filter-button" data-filter="all">All</button>
+        <button class="btn btn-outline-success filter-button" data-filter="task">Tasks</button>
+        <button class="btn btn-outline-warning filter-button" data-filter="goal">Goals</button>
+      </div>
+      
+      <div id="calendar"></div>
+    </div>
+<!--calendar itself-->
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async function () {
+  const calendarEl = document.getElementById('calendar');
+
+  // Function to fetch and filter events
+  async function fetchEvents(filter = "all") {
+    const response = await fetch('/api/events');
+    const events = await response.json();
+    return events
+      .filter(event => filter === "all" || event.type === filter)
+      .map(event => ({
+        title: event.title,
+        start: event.due_date,
+        extendedProps: {
+          description: event.description,
+          type: event.type,
+          priority: event.priority,
+          location: event.location,
+        },
+        className: `priority-${event.priority}`,
+        backgroundColor: getPriorityColor(event.priority), // Apply color based on priority
+        borderColor: getPriorityColor(event.priority),
+      }));
+  }
+  function getPriorityColor(priority) {
+    switch (priority) {
+      case 'high': return 'red';
+      case 'medium': return 'yellow';
+      case 'low': return 'green';
+      case 'default': return 'blue'; // Default color if priority is missing
+    }
+  }
+  // Initialize the calendar
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    events: async function (info, successCallback) {
+      const events = await fetchEvents();
+      successCallback(events);
+    },
+    eventClick: function (info) {
+      const event = info.event.extendedProps;
+      const locationInfo = event.location.address;
+      alert(`Event: ${info.event.title}\nType: ${event.type}\nDescription: ${event.description}${locationInfo}\nPriority: ${event.priority}`);
+
+    },
+  });
+
+  calendar.render();
+
+  // Add event listeners for filter buttons
+  document.querySelectorAll('.filter-button').forEach(button => {
+    button.addEventListener('click', async function () {
+      const filter = this.dataset.filter; // Get the filter type
+      const events = await fetchEvents(filter); // Fetch filtered events
+      calendar.removeAllEvents(); // Clear existing events
+      calendar.addEventSource(events); // Add filtered events
+    });
+  });
+});
+
+    </script>
+    <!-- Add Button -->
+    <button class="btn btn-primary position-fixed bottom-0 end-0 m-4" style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#taskModal">
+      + Add
+    </button> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="taskModalLabel">Add Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <form id="taskForm">
+          <!-- Task Title -->
+          <div class="mb-3">
+            <label for="taskTitle" class="form-label">Task Title</label>
+            <input type="text" class="form-control" id="taskTitle" placeholder="Enter task title" required>
+          </div>
+
+          <!-- Task Description -->
+          <div class="mb-3">
+            <label for="taskDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="taskDescription" rows="3" placeholder="Enter task description"></textarea>
+          </div>
+
+          <!-- Task Date -->
+          <div class="mb-3">
+            <label for="taskDate" class="form-label">Date</label>
+            <input type="date" class="form-control" id="taskDate">
+          </div>
+
+          <!-- Task Time -->
+          <div class="mb-3">
+            <label for="taskTime" class="form-label">Time</label>
+            <input type="time" class="form-control" id="taskTime">
+          </div>
+
+          <!-- Task Priority -->
+          <div class="mb-3">
+            <label for="taskPriority" class="form-label">Priority</label>
+            <select class="form-select" id="taskPriority">
+              <option value="default">  </option>
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+           <!-- Task Location -->
+           <div class="mb-3">
+            <label for="taskAddress" class="form-label">Task Address</label>
+            <input type="text" class="form-control" id="taskAddress" placeholder="Enter location address">
+            <button
+              type="button"
+              class="btn btn-secondary mt-2"
+              id="taskShowMapButton"
+              data-address-input="taskAddress"
+              data-map-container="taskMapContainer">
+              Show Map
+            </button>
+          </div>
+          <div id="taskMapContainer" class="mb-3" style="height: 300px; display: none;"></div>
+          <!-- User Email -->
+<div class="mb-3">
+  <label for="userEmail" class="form-label">User Email</label>
+  <input type="email" class="form-control" id="userEmail" placeholder="Enter user email">
+</div>
+<div class="mb-3">
+  <label for="taskReminderFrequency" class="form-label">Reminder Frequency (in hours)</label>
+  <select class="form-select" id="taskReminderFrequency">
+    <option value="none" selected>Don't Remind</option>
+    <option value="2" selected>Every 2 minutes</option>
+    <option value="8">Every 8 hours</option>
+    <option value="24" selected>Every 24 hours</option>
+    <option value="48">Every 48 hours</option>
+  </select>
+</div>
+          <!-- Subtasks Section -->
+<label for="goalTasks" class="form-label">Subtasks</label>
+<div id="subtaskContainer" class="mb-3">
+  <!-- Subtasks will be dynamically added here -->
+</div>
+
+<!-- Input for New Subtask -->
+<div class="input-group mb-3">
+  <input type="text" class="form-control" id="subtaskInput" placeholder="Enter subtask name">
+  <button type="button" class="btn btn-primary" id="addSubtaskButton">+ Add Subtask</button>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const subtaskContainer = document.getElementById("subtaskContainer");
+    const subtaskInput = document.getElementById("subtaskInput");
+    const addSubtaskButton = document.getElementById("addSubtaskButton");
+
+    // Add new subtask
+    addSubtaskButton.addEventListener("click", () => {
+      const subtaskName = subtaskInput.value.trim();
+
+      // Validate subtask name
+      if (!subtaskName) {
+        alert("Subtask name cannot be empty!");
+        return;
+      }
+
+      // Create subtask div
+      const subtaskDiv = document.createElement("div");
+      subtaskDiv.classList.add("form-check", "mb-2", "d-flex", "align-items-center");
+
+      // Create checkbox input
+      const subtaskCheckbox = document.createElement("input");
+      subtaskCheckbox.type = "checkbox";
+      subtaskCheckbox.classList.add("form-check-input", "me-2");
+      subtaskCheckbox.id = `subtask-${Date.now()}`;
+
+      // Create label for checkbox
+      const subtaskLabel = document.createElement("label");
+      subtaskLabel.classList.add("form-check-label", "flex-grow-1");
+      subtaskLabel.htmlFor = subtaskCheckbox.id;
+      subtaskLabel.textContent = subtaskName;
+
+      // Create remove icon
+      const removeIcon = document.createElement("i");
+      removeIcon.classList.add("bi", "bi-trash", "text-danger", "ms-2");
+      removeIcon.style.cursor = "pointer";
+      removeIcon.title = "Remove Subtask";
+
+      // Add click event listener to remove icon
+      removeIcon.addEventListener("click", () => {
+        subtaskDiv.remove();
+      });
+
+      // Append elements to subtask div
+      subtaskDiv.appendChild(subtaskCheckbox);
+      subtaskDiv.appendChild(subtaskLabel);
+      subtaskDiv.appendChild(removeIcon);
+
+      // Append subtask div to container
+      subtaskContainer.appendChild(subtaskDiv);
+
+      // Clear the input field
+      subtaskInput.value = "";
+    });
+
+    // Prevent form submission on Enter key in subtask input
+    subtaskInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addSubtaskButton.click();
+      }
+    });
+  });
+</script>
+          <!-- Save Button -->
+          <button type="submit" class="btn btn-primary w-100">Save Task</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.getElementById("taskForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  
+  // Collect form values
+  const title = document.getElementById("taskTitle").value.trim();
+  const description = document.getElementById("taskDescription").value.trim();
+  const dueDate = document.getElementById("taskDate").value;
+  const dueTime = document.getElementById("taskTime").value.trim();
+  const priority = document.getElementById("taskPriority").value;
+  const userEmail = document.getElementById("userEmail").value.trim();
+  const address = document.getElementById("taskAddress").value.trim();
+  const latitude = document.getElementById("latitude").value;
+  const longitude = document.getElementById("longitude").value;
+  const reminderFrequency = document.getElementById("taskReminderFrequency").value;
+ 
+  // Collect subtasks
+  const subtasks = Array.from(document.querySelectorAll("#subtaskContainer .form-check")).map((subtaskDiv) => {
+    const name = subtaskDiv.querySelector(".form-check-label").textContent.trim();
+    return { name, completed: false };
+  });
+
+  // Validate required fields
+  if (!title) {
+    alert("Title is required.");
+    return;
+  }
+
+  // Prepare payload
+  const body = {
+  title,
+  description: description || "",
+  due_date: dueDate || "",
+  due_time: dueTime || "",
+  priority: priority || "unspecified",
+  user_email: userEmail || "",
+  task_location: {
+    address: address || "",
+    latitude: latitude ? parseFloat(latitude) : "",
+    longitude: longitude ? parseFloat(longitude) : "",
+  },
+  reminder_frequency: reminderFrequency === "none" ? "" : parseInt(reminderFrequency, 10),
+};
+
+  if (subtasks.length > 0) {
+    body.goal_location = body.task_location; // Use the same location field for goals
+    body.subtasks = subtasks;
+    endpoint = "/api/goals";
+    successMessage = "Goal saved successfully!";
+  } else {
+    endpoint = "/api/tasks";
+    successMessage = "Task saved successfully!";
+  }
+  console.log("Payload being sent:", body);
+  try {
+   
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  
+    if (response.ok) {
+      
+      const result = await response.json();
+      console.log("Saved successfully:", result);
+      alert(successMessage);
+      document.getElementById("taskForm").reset(); // Clear the form
+      location.reload(); // Reload the page
+    } else {
+      const error = await response.json();
+      alert(`Failed to save: ${error.message}`);
+    }
+  } catch (error) {
+    console.error("Error saving task/goal:", error);
+    alert("An error occurred while saving. Please try again.");
+  }
+});
+
+</script>
+  <!--Show Map Button-->
+
+  </div>
+ <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const subtasksContainer = document.getElementById("editGoalSubtasksContainer");
+
+    // Add button to add a new subtask dynamically
+    const addSubtaskButton = document.createElement("button");
+    addSubtaskButton.textContent = "+ Add Subtask";
+    addSubtaskButton.type = "button"; // Prevent form submission
+    addSubtaskButton.className = "btn btn-primary mt-3";
+
+    // Add the button to the subtasks container or nearby
+    subtasksContainer.parentElement.appendChild(addSubtaskButton);
+
+    // Event listener for adding a new subtask
+    addSubtaskButton.addEventListener("click", () => {
+      // Create a new subtask div
+      const subtaskDiv = document.createElement("div");
+      subtaskDiv.className = "form-check mb-2 d-flex align-items-center";
+
+      // Create the checkbox input
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "form-check-input me-2";
+
+      // Create the label for the checkbox
+      const label = document.createElement("label");
+      label.className = "form-check-label flex-grow-1";
+      label.contentEditable = "true"; // Allow editing of the subtask name
+      label.textContent = "New Subtask"; // Default subtask text
+
+      // Create a delete icon for the subtask
+      const deleteIcon = document.createElement("i");
+      deleteIcon.className = "bi bi-trash text-danger ms-2";
+      deleteIcon.style.cursor = "pointer";
+      deleteIcon.title = "Remove Subtask";
+
+      // Add click event to delete the subtask
+      deleteIcon.addEventListener("click", () => {
+        subtaskDiv.remove();
+      });
+
+      // Append the checkbox, label, and delete icon to the subtask div
+      subtaskDiv.appendChild(checkbox);
+      subtaskDiv.appendChild(label);
+      subtaskDiv.appendChild(deleteIcon);
+
+      // Add the new subtask div to the subtasks container
+      subtasksContainer.appendChild(subtaskDiv);
+    });
+
+    // Handle form submission
+    document.getElementById("editGoalForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const goalId = document.querySelector(".expand-goal-button").getAttribute("data-goal-id");
+
+      const updatedGoal = {
+        title: document.getElementById("editGoalTitle").value.trim(),
+        description: document.getElementById("editGoalDescription").value.trim(),
+        due_date: document.getElementById("editGoalDueDate").value,
+        due_time: document.getElementById("editGoalDueTime").value,
+        priority: document.getElementById("editGoalPriority").value,
+        goal_location: {
+          address: document.getElementById("editGoalLocation").value.trim(),
+        },
+        subtasks: Array.from(document.querySelectorAll("#editGoalSubtasksContainer .form-check")).map(
+          (subtaskDiv) => {
+            const name = subtaskDiv.querySelector(".form-check-label").textContent.trim();
+            const completed = subtaskDiv.querySelector(".form-check-input").checked;
+            return { name, completed };
+          }
+        ),
+      };
+
+      try {
+        const response = await fetch(`/api/goals/${goalId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedGoal),
+        });
+
+        if (response.ok) {
+          alert("Goal updated successfully!");
+          location.reload(); // Reload the page to show updated goals
+        } else {
+          const error = await response.json();
+          console.error("Error response:", error);
+          alert(`Failed to update goal: ${error.message}`);
+        }
+      } catch (error) {
+        console.error("Error updating goal:", error);
+        alert("An error occurred while updating the goal.");
+      }
+    });
+  });
+</script>
+<script>
+  let map, marker, currentLocation, polyline;
+  
+  async function showMap(event) {
+    const button = event.target;
+  
+    // Dynamically get IDs from button's data attributes
+    const addressInputId = button.getAttribute("data-address-input");
+    const mapContainerId = button.getAttribute("data-map-container");
+  
+    const addressInput = document.getElementById(addressInputId);
+    const mapContainer = document.getElementById(mapContainerId);
+  
+    // Validate that elements exist
+    if (!addressInput || !mapContainer) {
+      alert("Address input or map container not found.");
+      return;
+    }
+  
+    const address = addressInput.value.trim();
+    if (!address) {
+      alert("Please enter an address.");
+      return;
+    }
+  
+    // Show the map container
+    mapContainer.style.display = "block";
+  
+    // Initialize map if not already initialized
+    if (!map) {
+      map = L.map(mapContainerId).setView([0, 0], 13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+  
+      // Fetch user's current location
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          currentLocation = [position.coords.latitude, position.coords.longitude];
+          marker = L.marker(currentLocation)
+            .addTo(map)
+            .bindPopup("Your Location")
+            .openPopup();
+          map.setView(currentLocation, 13);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          alert("Could not fetch your current location. Please enable location services.");
+        }
+      );
+  
+      // Add click listener to update marker and coordinates
+      map.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+        updateMarker(lat, lng, addressInputId);
+        showLatLngPopup(lat, lng);
+      });
+    }
+  
+    try {
+      // Geocode the address
+      const ORS_API_KEY = "5b3ce3597851110001cf62481a7be0629d544cfca63479c1d2ed1804";
+      const response = await fetch(
+        `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(address)}`
+      );
+      const data = await response.json();
+  
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].geometry.coordinates;
+  
+        updateMarker(lat, lng);
+        map.setView([lat, lng], 13);
+  
+        if (currentLocation) {
+          if (polyline) {
+            map.removeLayer(polyline);
+          }
+          polyline = L.polyline([currentLocation, [lat, lng]], { color: "blue" }).addTo(map);
+          map.fitBounds(polyline.getBounds());
+  
+          const distance = calculateDistance(
+            currentLocation[0],
+            currentLocation[1],
+            lat,
+            lng
+          );
+          alert(`Distance from your location to the address: ${distance.toFixed(2)} km`);
+        }
+      } else {
+        alert("Address not found.");
+      }
+    } catch (error) {
+      console.error("Error fetching geocode data:", error);
+      alert("Failed to fetch location. Please try again.");
+    }
+  }
+  
+  function updateMarker(lat, lng) {
+    if (!marker) {
+      marker = L.marker([lat, lng]).addTo(map);
+    } else {
+      marker.setLatLng([lat, lng]);
+    }
+  
+    const latitudeInput = document.getElementById("latitude");
+    const longitudeInput = document.getElementById("longitude");
+    if (latitudeInput && longitudeInput) {
+      latitudeInput.value = lat;
+      longitudeInput.value = lng;
+    } else {
+      console.error("Latitude or longitude inputs not found.");
+    }
+  }
+  
+  function showLatLngPopup(lat, lng) {
+    if (marker) {
+      marker.bindPopup(`Latitude: ${lat.toFixed(5)}, Longitude: ${lng.toFixed(5)}`).openPopup();
+    }
+  }
+  
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  
+  // Attach the click listener to both buttons dynamically
+  document.addEventListener("click", (event) => {
+    if (
+      event.target.id === "taskShowMapButton" || 
+      event.target.id === "editTaskShowMapButton"
+    ) {
+      showMap(event);
+    }
+  });
+  </script>
+  
+
+ 
+
+</body>
+</html>

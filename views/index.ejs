@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.4/fullcalendar.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">Welcome</h1>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg  mt-3">
+      <div class="container-fluid" >
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class = 'nav-item'>
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">Dashboard</a>
+            </li>
+           
+          
+         
+          </ul>
+        </div>
+     
+
+        
+      </div>
+    </nav>
+    
+    
+    <div class="main-index d-flex justify-content-between align-items-start flex-wrap"> 
+      
+      <div class="card mt-4" style="width: 100%;">
+        <div class="card-body">
+          <h4>Your Current Location</h4>
+          <p id="userLocation">Fetching your location...</p>
+        </div>  
+      </div>
+      
+      <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const locationText = document.getElementById("userLocation");
+      
+        if (!navigator.geolocation) {
+          locationText.textContent = "Geolocation is not supported by your browser.";
+          return;
+        }
+      
+        // Fetch the user's current location
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+      
+            try {
+              // Fetch the place name using Reverse Geocoding
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+              );
+              const data = await response.json();
+      
+              if (data && data.display_name) {
+                locationText.textContent = `Your Current Location: ${data.display_name}`;
+              } else {
+                locationText.textContent = "Unable to fetch place name.";
+              }
+            } catch (error) {
+              console.error("Error fetching place name:", error);
+              locationText.textContent = "Error fetching your location.";
+            }
+          },
+          (error) => {
+            console.error("Error fetching location:", error);
+            locationText.textContent = "Please enable location permissions to fetch your location.";
+          },
+          { enableHighAccuracy: true }
+        );
+      });
+      </script>
+      
+  
+   
+  </div>
+        <script>
+          document.querySelectorAll('.dashboard-navigation .nav-link').forEach((link) => {
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    const targetId = event.target.getAttribute('href').substring(1);
+    const targetSection = document.getElementById(targetId);
+    if (targetSection) {
+      targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+        </script>
+      </div>
+      <div class="container mt-5">
+        <div class="row">
+           <!-- Section: Things To Do Near You -->
+    <div class="col-md-6" id="nearYouSection">
+      <h4>Things To Do Near You</h4>
+      <div id="taskList" class="card bg-light p-3">
+        <p>Loading tasks...</p>
+      </div>
+    </div>
+      
+          <!-- Section: Progress Summary -->
+          <div class="col-md-6">
+            <h4>Progress Summary</h4>
+            <div id="statsContainer" class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5>Tasks Completed</h5>
+                <p id="tasksCompleted" class="text-success">0</p>
+              </div>
+              <div>
+                <h5>Goals Completed</h5>
+                <p id="goalsCompleted" class="text-primary">0</p>
+              </div>
+            </div>
+            <div class="text-center">
+              <canvas id="progressSummaryChart" style="width: 100%; height: 300px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+          const chartCanvas = document.getElementById("progressSummaryChart");
+          const tasksCompletedEl = document.getElementById("tasksCompleted");
+          const goalsCompletedEl = document.getElementById("goalsCompleted");
+          let chart;
+      
+          // Function to fetch stats and update UI
+          async function fetchStatsAndUpdateUI() {
+            try {
+              const response = await fetch("/api/stats");
+              if (!response.ok) throw new Error("Failed to fetch stats");
+      
+              const { tasksCompleted, tasksTotal, goalsCompleted, goalsTotal } = await response.json();
+      
+              // Update the counts in the UI
+              tasksCompletedEl.textContent = `${tasksCompleted} / ${tasksTotal}`;
+              goalsCompletedEl.textContent = `${goalsCompleted} / ${goalsTotal}`;
+      
+              // Calculate chart data
+              const totalItems = tasksTotal + goalsTotal;
+              const completed = tasksCompleted + goalsCompleted;
+              const inProgress = totalItems - completed;
+      
+              const data = {
+                labels: ["Completed", "In Progress"],
+                datasets: [
+                  {
+                    data: [completed, inProgress],
+                    backgroundColor: ["#28a745", "#ffc107"], // Green for completed, yellow for in-progress
+                  },
+                ],
+              };
+      
+              const options = {
+                responsive: false,
+                maintainAspectRatio: false,
+              };
+      
+              // Destroy existing chart if it exists
+              if (chart) chart.destroy();
+      
+              // Create new chart
+              chart = new Chart(chartCanvas, {
+                type: "pie",
+                data,
+                options,
+              });
+            } catch (error) {
+              console.error("Error updating UI:", error);
+            }
+          }
+      
+       
+      
+          // Event delegation for dynamically added subtasks
+          document.addEventListener("change", async (e) => {
+            if (e.target.classList.contains("form-check-input")) {
+              const checkbox = e.target;
+              const goalId = checkbox.getAttribute("data-goal-id");
+              const subtaskIndex = checkbox.getAttribute("data-subtask-index");
+              const updatedStatus = checkbox.checked;
+      
+              // Update subtask and refresh UI
+              await updateSubtaskStatus(goalId, subtaskIndex, updatedStatus);
+              await fetchStatsAndUpdateUI();
+            }
+          });
+      
+          // Initial fetch and UI update
+          await fetchStatsAndUpdateUI();
+        });
+      </script>
+      
+      
+      
+    </div>
+    
+  
+    
+    </div>
+ 
+<!--Location Distance-->
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+  const locationText = document.getElementById("userLocation");
+  const taskList = document.getElementById("taskList");
+  const maxTasksToShow = 5; // Number of closest tasks to display
+  let userCoords = null;
+
+  // Haversine formula to calculate the distance
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  }
+  // Estimate travel time based on distance and mode of travel
+  function estimateTime(distance, mode) {
+      const speeds = {
+        walking: 5, // Average speed in km/h
+       
+      };
+
+      const speed = speeds[mode] || speeds.walking;
+      const timeInHours = distance / speed;
+      const hours = Math.floor(timeInHours);
+      const minutes = Math.round((timeInHours - hours) * 60);
+
+      if (hours > 0) {
+        return `${hours} hour(s) and ${minutes} minute(s)`;
+      } else {
+        return `${minutes} minute(s)`;
+      }
+    }
+
+  if (!navigator.geolocation) {
+    locationText.textContent = "Geolocation is not supported by your browser.";
+    return;
+  }
+
+  // Fetch user's current location
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      userCoords = { lat: latitude, lon: longitude };
+
+      locationText.textContent = `Your Current Location: Latitude ${latitude.toFixed(2)}, Longitude ${longitude.toFixed(2)}`;
+
+      try {
+        // Fetch tasks from the API
+        const response = await fetch("/api/tasks");
+        const rawData = await response.json();
+
+        console.log("Raw API Response:", rawData); // Debugging log
+
+        const tasks = rawData.tasks || [];
+
+        if (!Array.isArray(tasks)) {
+          throw new Error("API did not return an array of tasks.");
+        }
+
+        // Calculate distances and sort tasks
+        const tasksWithDistance = tasks.map((task) => {
+          const { latitude, longitude } = task.task_location || {};
+          if (latitude && longitude) {
+            const distance = calculateDistance(userCoords.lat, userCoords.lon, latitude, longitude);
+            return { ...task, distance };
+          }
+          return { ...task, distance: Infinity }; // Assign a large distance for missing coordinates
+        });
+//place task with no location at the end --> recently fixed from original code
+        tasksWithDistance.sort((a, b) => {
+  if (a.distance === Infinity) return 1;
+  if (b.distance === Infinity) return -1; 
+  return a.distance - b.distance;
+});
+
+
+        // Display the closest tasks
+        const nearestTasks = tasksWithDistance.slice(0, maxTasksToShow);
+        taskList.innerHTML = "";
+
+        nearestTasks.forEach((task) => {
+          if (task.distance !== Infinity) {
+ 
+            const timeEstimation = estimateTime(task.distance);
+            taskList.innerHTML += `
+               <div class="task-item mb-3">
+    <h5>${task.title}</h5>
+    <p><strong>Distance:</strong> ${task.distance.toFixed(2)} km, ( ${timeEstimation} walk) </p>
+     
+    ${task.due_date ? `<p><strong>Due Date:</strong> ${new Date(task.due_date).toLocaleDateString()}</p>` : ""}
+    
+ ${task.due_time ? `<p><strong>Due Time:</strong> ${task.due_time}</p>` : ""}
+    ${task.priority ? `<p><strong>Priority:</strong> ${task.priority}</p>` : ""}
+    ${task.task_location?.address ? `<p><strong>Address:</strong> ${task.task_location.address}</p>` : ""}
+    <p>${task.description || ""}</p>
+  </div>
+            `;
+          } else {
+            taskList.innerHTML += `
+              <div class="task-item mb-3">
+                <h5>${task.title}</h5>
+                <p>${task.task_location?.address || "No address provided"}</p>
+              </div>
+            `;
+          }
+        });
+      } catch (error) {
+        console.error("Error processing tasks:", error);
+        locationText.textContent = "Error fetching tasks.";
+      }
+    },
+    (error) => {
+      console.error("Error fetching location:", error);
+      locationText.textContent = "Please enable location permissions to fetch your location.";
+    },
+    { enableHighAccuracy: true }
+  );
+});
+
+</script>
+
+    
+  </div>
+
+    
+</body>
+</html>

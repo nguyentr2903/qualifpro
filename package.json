@@ -1,0 +1,48 @@
+{
+  "name": "plancake",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fullcalendar/core": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
+    "apn": "^2.2.0",
+    "axios": "^1.7.9",
+    "bcrypt": "^5.1.1",
+    "chart.js": "^4.4.7",
+    "cors": "^2.8.5",
+    "dark-mode-toggle": "^0.16.1",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-validator": "^7.2.0",
+    "fullcalendar": "^6.1.15",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.3",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.16",
+    "request": "^2.88.2",
+    "sequelize": "^6.37.5",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-fetch-mock": "^3.0.3",
+    "jsdom": "^25.0.1",
+    "nodemon": "^3.1.7"
+  }
+}
