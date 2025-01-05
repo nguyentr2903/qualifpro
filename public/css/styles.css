@@ -1,0 +1,79 @@
+body {
+  background-color: white;
+}
+
+.dark-mode {
+  background-color: black;
+  color: white;
+}
+
+/* Default light mode styles */
+#setting-list {
+  background-color: white;
+  color: black;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+#setting-list .list-group-item {
+  background-color: white;
+  color: black;
+  border: none;
+  padding: 12px 16px;
+}
+
+#setting-list .list-group-item a {
+  color: black;
+  text-decoration: none;
+}
+
+#setting-list .list-group-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Dark mode styles */
+.dark-mode #setting-list {
+  background-color: black;
+  color: white;
+  border: 1px solid #333;
+}
+
+.dark-mode #setting-list .list-group-item {
+  background-color: black;
+  color: white;
+}
+
+.dark-mode #setting-list .list-group-item a {
+  color: white;
+}
+
+.dark-mode #setting-list .list-group-item:hover {
+  background-color: #333;
+}
+/* Default light mode styles */
+.navbar {
+  background-color: #f8f9fa; /* Light background */
+  color: #000; /* Dark text */
+}
+
+.navbar a.nav-link {
+  color: #000; /* Default link color */
+}
+
+  .priority-high {
+    background-color: rgb(208, 113, 113) !important;
+    border-color: rgb(208, 113, 113) !important;
+    color:black;
+    
+    
+  }
+  .priority-medium {
+    background-color: rgb(248, 248, 195) !important;
+    border-color: rgb(248, 248, 195) !important;
+    color:black;
+  }
+  .priority-low {
+    background-color: rgb(145, 193, 145) !important;
+    border-color: rgb(145, 193, 145) !important;
+    color:black;
+  }
