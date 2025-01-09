@@ -59,9 +59,6 @@ router.get("/dashboard", async (req, res) => {
 });
 
 
-
-
-
 router.get("/settings/", (req, res) => {
   res.render("settings", {
     title: "PlanCake - Settings",
