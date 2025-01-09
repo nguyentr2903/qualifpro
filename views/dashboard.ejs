@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.css">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -241,6 +242,7 @@
             headers: {
               "Content-Type": "application/json",
             },
+           
           });
   
           if (!response.ok) {
@@ -353,7 +355,7 @@
 }
 
  </script>
-
+<!--Task Form Add-->
     <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -404,7 +406,7 @@
               <div id="editTaskMapContainer" class="mb-3" style="height: 300px; display: none;"></div>
               <input type="hidden" id="latitude" name="latitude">
               <input type="hidden" id="longitude" name="longitude">
-              <!-- Map Container -->
+             
               <div id="mapContainer" class="mb-3" style="height: 300px; display: none;"></div>
               <button type="submit" class="btn btn-primary w-100">Save Changes</button>
             </form>
@@ -668,7 +670,7 @@
           <!-- Subtasks Section -->
 <label for="goalTasks" class="form-label">Subtasks</label>
 <div id="subtaskContainer" class="mb-3">
-  <!-- Subtasks will be dynamically added here -->
+  <!-- Subtasks are added here -->
 </div>
 
 <!-- Input for New Subtask -->
@@ -834,6 +836,8 @@
 
   </div>
  <script>
+  
+
   document.addEventListener("DOMContentLoaded", () => {
     const subtasksContainer = document.getElementById("editGoalSubtasksContainer");
 
@@ -990,10 +994,7 @@
   
     try {
       // Geocode the address
-      const ORS_API_KEY = "5b3ce3597851110001cf62481a7be0629d544cfca63479c1d2ed1804";
-      const response = await fetch(
-        `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(address)}`
-      );
+      const response = await fetch(`api/geocode?address=${encodeURIComponent(address)}`);
       const data = await response.json();
   
       if (data.features && data.features.length > 0) {
