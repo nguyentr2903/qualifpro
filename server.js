@@ -1,19 +1,20 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const appRoutes = require("./app");
 const taskRoutes = require("./routes/tasks");
 const goalsRoutes = require("./routes/goals");
 const eventsRouter = require("./routes/events");
 const statsRouter = require("./routes/stats");
+const locationRouter = require("./routes/geocode");
 const { scheduleTaskNotifications } = require("./cronScheduler");
 const { scheduleGoalNotifications } = require("./cronScheduler");
 
-dotenv.config();
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 
 // Middleware
 app.use(cors());
@@ -33,8 +34,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/goals", goalsRoutes);
 app.use("/api/events", eventsRouter);
 app.use("/api/stats", statsRouter);
-
-
+app.use("/api/geocode", locationRouter);
 
 // 404 Error Handler
 app.use((req, res) => {
@@ -46,6 +46,7 @@ app.use((err, req, res, next) => {
   console.error("Server Error:", err.message);
   res.status(500).json({ error: "Internal Server Error" });
 });
+
 
 // Connect to MongoDB
 const MONGO_URI = process.env.MONGO_URI;
