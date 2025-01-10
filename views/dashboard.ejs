@@ -342,7 +342,6 @@
 
     if (response.ok) {
       const updatedStats = await response.json();
-      localStorage.setItem("stats", JSON.stringify(updatedStats));
       alert("Task marked as complete!");
     } else {
       const error = await response.json();
